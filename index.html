@@ -19,7 +19,7 @@
         overflow: hidden;
       }
       #modal {
-        display: none;
+        display: flex;
         justify-content: center;
         align-items: center;
         position: absolute;
@@ -49,7 +49,7 @@
         font-weight: bold;
         color: #f44;
       }
-      #replay_btn {
+      #play_btn {
         display: inline-block;
         font-size: 1.5rem;
         color: #bbb;
@@ -60,7 +60,7 @@
         text-align: center;
         border-radius: 10px;
       }
-      #replay_btn:hover {
+      #play_btn:hover {
         cursor: pointer;
         background-color: #f44;
         color: #fff;
@@ -89,6 +89,7 @@
       }
       #pick_player:hover {
         cursor: pointer;
+        box-shadow: 0 0 5px orange;
       }
       canvas {
         width: 100vw;
@@ -100,9 +101,9 @@
   <body>
     <div id="modal">
       <div id="modal_window">
-        <span id="win_info">Player One Wins!</span>
+        <span id="win_info">Pick Opponent</span>
         <span id="pick_player" data-player="Computer">🧑💻</span>
-        <span id="replay_btn">replay</span>
+        <span id="play_btn">play</span>
       </div>
     </div>
     <canvas id="canvas"></canvas>
@@ -122,29 +123,30 @@
       let wPressed = false;
       let sPressed = false;
 
-      const speed = 8;
+      let speed;
       let gameStopped = false;
       let playerOneScore = 0;
       let playerTwoScore = 0;
       const ballRadius = 15;
       let ballX = (canvas.width - ballRadius) / 2;
       let ballY = (canvas.height - ballRadius) / 2;
-      let dx = 0;
-      let dy = 0;
+      let dx;
+      let dy;
       let ballServed = false;
+      let scorePlayer, ballColor;
 
       document.addEventListener('keydown', keyDownHandler, false);
       document.addEventListener('keyup', keyUpHandler, false);
-      const replayBtn = document.getElementById('replay_btn');
+      const playBtn = document.getElementById('play_btn');
       function resize() {
-        console.log('resize');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         ballX = (canvas.width - ballRadius) / 2;
         ballY = (canvas.height - ballRadius) / 2;
       }
       window.addEventListener('resize', resize);
-      replayBtn.addEventListener('click', function () {
+      playBtn.addEventListener('click', function () {
+        document.getElementById('modal').style.display = 'none';
         startGame();
       });
 
@@ -200,7 +202,7 @@
       function drawBall() {
         ctx.beginPath();
         ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = ballColor;
         ctx.fill();
       }
 
@@ -250,32 +252,50 @@
       }
 
       function resetBall() {
+        ballColor = 'white';
+        console.log(gameStopped);
         ballX = (canvas.width - ballRadius) / 2;
         ballY = (canvas.height - ballRadius) / 2;
-        if ((playerOneScore + playerTwoScore) % 2 === 0) {
-          // if (playerOneScore > playerTwoScore)
-          dx = speed;
-          dy = speed;
-        } else {
-          dx = -speed;
-          dy = -speed;
+        dx = speed * scorePlayer;
+        // if ((playerOneScore + playerTwoScore) % 2 === 0) {
+        //   dx = speed;
+        //   dy = speed;
+        // } else {
+        //   dx = -speed;
+        //   dy = -speed;
+        // }
+      }
+
+      function wait(ms) {
+        let start = new Date().getTime();
+        let end = start;
+        while (end < start + ms) {
+          end = new Date().getTime();
         }
       }
 
       function draw() {
+        // console.log({ gameStopped });
         if (gameStopped === false) {
           ctx.fillStyle = 'black';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           drawNet();
           drawPlayerOne();
           drawPlayerTwo();
-          drawBall();
 
           if (ballX > canvas.width - ballRadius) {
             playerOneScore += 1;
+            scorePlayer = 1;
+            // ballColor = 'red';
+            // drawBall();
+            wait(1000);
             resetBall();
           } else if (ballX < ballRadius) {
             playerTwoScore += 1;
+            scorePlayer = -1;
+            // ballColor = 'red';
+            // drawBall();
+            wait(1000);
             resetBall();
           } else if (
             (ballX - ballRadius <= playerWidth &&
@@ -328,11 +348,11 @@
           ballX += dx;
           ballY += dy;
         }
+        drawBall();
       }
-      // setInterval(draw, 20);
 
       function startGame() {
-        document.getElementById('modal').style.display = 'none';
+        // document.getElementById('modal').style.display = 'flex';
         playerOneY = (canvas.height - playerHeight) / 2;
         playerTwoY = (canvas.height - playerHeight) / 2;
         gameStopped = false;
@@ -343,6 +363,8 @@
         ballServed = false;
         ballX = (canvas.width - ballRadius) / 2;
         ballY = (canvas.height - ballRadius) / 2;
+        speed = 6;
+        ballColor = 'white';
         resize();
         draw();
       }
